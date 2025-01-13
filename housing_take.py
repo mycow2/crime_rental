@@ -28,7 +28,7 @@ def get_housing(year):
     #base.columns = base.columns.str.replace('\n','')
     #base.columns = base.columns.str.replace(' ','_')
     
-    relevant_columns = ['borough', 'neighborhood', 'address','building_class_category',
+    relevant_columns = ['borough', 'neighborhood', 'address','apartment_number','building_class_category',
                         'building_class_at_present','block','lot','zip_code','residentialunits',
                         'commercialunits','total_units',
                         'land_square_feet', 'gross_square_feet', 'year_built','tax_class_at_time_of_sale',
@@ -51,3 +51,7 @@ all_housing['year'] = all_housing['sale_date'].dt.year
 
 #%% exporting
 all_housing.to_csv(r'\\owg.ds.corp\serverfarm\KnowledgeBase\Health\0-Training\2024\New Hire Orientation\Work\MT\P Projects\all_housing_nyc.csv')
+
+#%%
+sample =all_housing.groupby('year').sample(frac=0.01, random_state=42) 
+dupe_sales = all_housing[all_housing.duplicated(subset = ['block','lot'],keep=False)].sort_values(subset = ['block','lot'])
