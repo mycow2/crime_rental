@@ -57,11 +57,62 @@ def clean_apt(address):
         apt = address
     return apt
 #%% Cleaning Apartment Number
+
+#specifically aprtment number
 all_housing['apartment_number'] = all_housing['apartment_number'].str.strip()
 all_housing['apartment_number'] = all_housing['apartment_number'].astype(str)
 
-#where apt number is empty or nan
+#where apt number is empty or nan fix
 all_housing['apartment_number'] = np.where(all_housing['apartment_number'].isin(['','nan']),all_housing['address'].apply(clean_apt),all_housing['apartment_number'])
 all_housing['apartment_number'] = all_housing['apartment_number'].str.strip()
 all_housing['lot'] = all_housing['lot'].astype(str).str.strip()
 all_housing['block'] = all_housing['block'].astype(str).str.strip()
+all_housing['block_lot_num'] = all_housing['block'] + '_' + all_housing['lot'] + '_' + all_housing['apartment_number']
+
+# limiting to A,B,C,D,R,S - https://www.nyc.gov/assets/finance/jump/hlpbldgcode.html
+all_housing = all_housing[(all_housing['building_class_at_present'].str[0].isin(['A','B','C','D','S'])) | (all_housing['building_class_at_present'].isin(['R1','R2',
+                                                                                                                                                    'R3','R4','R6',
+                                                                                                                                                              'R6','R7','R8','R9']))]
+
+#limiting to just < 3 units - basically single transactions
+all_housing = all_housing[all_housing['total_units'] < 3] 
+# cleaning neighborhood
+all_housing['neighborhood'] = all_housing['neighborhood'].astype(str).str.strip()
+
+a_test = all_housing[all_housing.duplicated(subset = ['sale_price','sale_date'])]
+#%% exporting
+all_housing.to_csv(r'\\owg.ds.corp\serverfarm\KnowledgeBase\Health\0-Training\2024\New Hire Orientation\Work\MT\P Projects\all_housing_manhattan_2010_2023.csv')
+
+#%% EDA
+eda = all_housing[all_housing['total_units'] < 3] 
+#excluding transfers for no cash considerations
+eda = eda[eda['sale_price']>=1000]
+#dropping those with same exact sale price on same day and block...
+eda = eda[~eda.duplicated(subset = ['sale_price','sale_date','block'])]
+
+dupe_sales = eda[eda.duplicated(subset = ['apartment_number','block','lot'],keep=False)].sort_values(by = ['block','lot','apartment_number'])
+
+#%%
+#how many properties exchanged hands?  21834 Changed Hands in the period 2010 - 2023
+print(dupe_sales['block_lot_num'].nunique())
+
+#by neighborhood? 
+neighborhood_sales = dupe_sales['neighborhood'].value_counts().reset_index()
+"""
+Most by volume is UES and UWS. Followed then by Chelsea and Midtown.
+"""
+
+#by sale price? by neighborhood and sale price? 
+price_by_loc = dupe_sales.groupby('block_lot_num').agg({'sale_price':'mean','lot':'count'}).reset_index()
+print(price_by_loc['sale_price'].median())
+price_by_neighborhood = dupe_sales.groupby('neighborhood').agg({'sale_price':'mean','lot':'count'}).reset_index().sort_values('sale_price',ascending = False).reset_index(drop=True)
+print(price_by_neighborhood['sale_price'].median())
+
+#by neighborhood and year
+price_by_neighborhood_yr = dupe_sales.groupby(['neighborhood','year']).agg({'sale_price':'median','lot':'count'}).reset_index().sort_values('sale_price',ascending = False).reset_index(drop=True)
+
+#%%
+a = dupe_sales[dupe_sales['neighborhood']=='GREENWICH VILLAGE-WEST']
+aa = all_housing[all_housing['total_units'] > 10]
+
+all_housing[all_housing['address']]
