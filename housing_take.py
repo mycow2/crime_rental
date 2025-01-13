@@ -6,10 +6,17 @@ Created on Fri Jan 10 17:07:42 2025
 """
 #%%
 import pandas as pd
-
+#%% example links
+#https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/annualized-sales/2010/2010_manhattan.xls
+#https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/annualized-sales/2017/2017_manhattan.xls
 #%% getting the data
 def get_housing(year): 
-    base = pd.read_excel(f'https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/annualized-sales/{str(year)}/{str(year)}_manhattan.xlsx')
+    if year > 2017: 
+        excel = 'xlsx'
+    else: 
+        excel = 'xls'
+    
+    base = pd.read_excel(f'https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/annualized-sales/{str(year)}/{str(year)}_manhattan.{excel}')
     base.columns = ['borough', 'neighborhood', 'building_class_category',
            'tax_class_at_present', 'block', 'lot', 'ease-ment',
            'building_class_at_present', 'address', 'apartment_number', 'zip_code',
@@ -32,7 +39,7 @@ def get_housing(year):
     return out
 
 housing_dict = {}
-for year in range(2018,2024): 
+for year in range(2010,2024): 
     housing_dict[year] = get_housing(year)
 #%% concat
 all_housing = pd.concat(housing_dict.values())
