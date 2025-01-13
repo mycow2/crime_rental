@@ -8,5 +8,12 @@ Inspired by a paper written about cartel violence and accepted wage decreases.
 https://cosspp.fsu.edu/dmc/wp-content/uploads/sites/8/2020/09/02.2009-Crime-and-Housing-Prices.pdf
 Pretty good read reviewing previous literature, in sort of a similar way we do it. 
 
-**Data Sources: **
-https://data.cityofnewyork.us/api/views/uip8-fykc/rows.csv?accessType=DOWNLOAD
+** Data Sources: **
+- https://data.cityofnewyork.us/api/views/uip8-fykc/rows.csv?accessType=DOWNLOAD
+- https://www.nyc.gov/site/finance/property/property-rolling-sales-data.page
+- https://www.nyc.gov/site/finance/property/property-annualized-sales-update.page
+- https://www.nyc.gov/site/finance/about/open-portal.page
+
+** Docs: **
+- https://www.nyc.gov/assets/finance/downloads/pdf/07pdf/glossary_rsf071607.pdf
+- https://www.nyc.gov/assets/finance/jump/hlpbldgcode.html
