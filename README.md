@@ -1,4 +1,4 @@
-# crime_rental
+# ~crime_rental~ Housing Appreciation following the 2nd Avenue Subway Extension
 Personal project looking at NYC crime and rental prices / sale prices
 
 Inspired by a paper written about cartel violence and accepted wage decreases. 
@@ -17,3 +17,6 @@ Pretty good read reviewing previous literature, in sort of a similar way we do i
 ** Docs: **
 - https://www.nyc.gov/assets/finance/downloads/pdf/07pdf/glossary_rsf071607.pdf
 - https://www.nyc.gov/assets/finance/jump/hlpbldgcode.html
+
+** Paper to Emulate: **
+- https://onlinelibrary.wiley.com/doi/abs/10.1111/pirs.12038
