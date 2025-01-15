@@ -89,8 +89,11 @@ eda = all_housing[all_housing['total_units'] < 3]
 eda = eda[eda['sale_price']>=1000]
 #dropping those with same exact sale price on same day and block...
 eda = eda[~eda.duplicated(subset = ['sale_price','sale_date','block'])]
+eda.to_csv(r'\\owg.ds.corp\serverfarm\KnowledgeBase\Health\0-Training\2024\New Hire Orientation\Work\MT\P Projects\manhattan_limited.csv')
+
 
 dupe_sales = eda[eda.duplicated(subset = ['apartment_number','block','lot'],keep=False)].sort_values(by = ['block','lot','apartment_number'])
+dupe_sales.to_csv(r'\\owg.ds.corp\serverfarm\KnowledgeBase\Health\0-Training\2024\New Hire Orientation\Work\MT\P Projects\manhattan_dupe_sales.csv')
 
 #%%
 #how many properties exchanged hands?  21834 Changed Hands in the period 2010 - 2023
@@ -111,8 +114,3 @@ print(price_by_neighborhood['sale_price'].median())
 #by neighborhood and year
 price_by_neighborhood_yr = dupe_sales.groupby(['neighborhood','year']).agg({'sale_price':'median','lot':'count'}).reset_index().sort_values('sale_price',ascending = False).reset_index(drop=True)
 
-#%%
-a = dupe_sales[dupe_sales['neighborhood']=='GREENWICH VILLAGE-WEST']
-aa = all_housing[all_housing['total_units'] > 10]
-
-all_housing[all_housing['address']]
