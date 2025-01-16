@@ -12,6 +12,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 from shapely import wkt
 import os
+import numpy as np
 
 stations = pd.read_csv(r"\\owg.ds.corp\serverfarm\KnowledgeBase\Health\0-Training\2024\New Hire Orientation\Work\MT\P Projects\2nd Ave Extension\MTA_Subway_Stations.csv")
 stations['geometry'] = stations['geometry'].apply(wkt.loads)
@@ -76,14 +77,62 @@ ues_repeat_sales.explore(column = 'appr_bin',
                          cmap = cat_cmap,
                          categorical = True,
                          m = other_subway).save('test.html')
-#%%
+#%% getting closest subway station both overall and in other
 from geopy.distance import geodesic
 
-df = pd.merge(second_ave[['Stop Name','geometry']],ues_repeat_sales[['block_lot_num','sale_date_1','geometry']],
+#closest second ave
+closest_second = pd.merge(second_ave[['Stop Name','geometry']].to_crs('EPSG:3857'),ues_repeat_sales[['block_lot_num','sale_date_1','geometry']].to_crs('EPSG:3857'),
               suffixes = ['_1','_2'],how = 'cross')
 
-df['distance'] = df.geometry_1.distance(df.geometry_2)
+closest_second['distance'] = closest_second.geometry_1.distance(closest_second.geometry_2)
 
-df = df.sort_values(by = 'distance')
-df = df.drop_duplicates(subset = ['block_lot_num','sale_date_1'])
+closest_second = closest_second.sort_values(by = 'distance')
+closest_second['distance'] = closest_second['distance'] / 1609.34
+closest_second = closest_second.drop_duplicates(subset = ['block_lot_num','sale_date_1']).rename(columns = {'Stop Name':'closest_second',
+                                                                                                            'distance':'distance_second'})
 
+#closest other
+closest_other = pd.merge(other_m[['Stop Name','geometry']].to_crs('EPSG:3857'),ues_repeat_sales[['block_lot_num','sale_date_1','geometry']].to_crs('EPSG:3857'),
+              suffixes = ['_1','_2'],how = 'cross')
+
+closest_other['distance'] = closest_other.geometry_1.distance(closest_other.geometry_2)
+closest_other['distance'] = closest_other['distance'] / 1609.34
+
+closest_other = closest_other.sort_values(by = 'distance')
+closest_other = closest_other.drop_duplicates(subset = ['block_lot_num','sale_date_1']).rename(columns = {'Stop Name':'closest_other',
+                                                                                                           'distance':'distance_other'})
+#merging
+closest_subways = pd.merge(closest_other[['closest_other','distance_other','block_lot_num','sale_date_1']],
+                           closest_second[['closest_second','distance_second','block_lot_num','sale_date_1']], on = ['block_lot_num','sale_date_1'],
+                           how = 'inner')
+
+#%% merging
+ues_repeat_sales_closest_subway = pd.merge(ues_repeat_sales,closest_subways,on = ['block_lot_num','sale_date_1'],
+                                           how = 'left')
+
+#flags for closest
+ues_repeat_sales_closest_subway['72nd'] = np.where(ues_repeat_sales_closest_subway['closest_second']=='72 St',1,0)
+ues_repeat_sales_closest_subway['86th'] = np.where(ues_repeat_sales_closest_subway['closest_second']=='86 St',1,0)
+ues_repeat_sales_closest_subway['96th'] = np.where(ues_repeat_sales_closest_subway['closest_second']=='96 St',1,0)
+
+#whether or not new station would be the closest
+ues_repeat_sales_closest_subway['new_closest'] = np.where(ues_repeat_sales_closest_subway['distance_other'] > ues_repeat_sales_closest_subway['distance_second'],1,0)
+ues_repeat_sales_closest_subway['dist_x_new_closest'] = ues_repeat_sales_closest_subway['distance_second'] * ues_repeat_sales_closest_subway['new_closest']
+ues_repeat_sales_closest_subway['log_distance_other'] = np.log(ues_repeat_sales_closest_subway['distance_other'])
+ues_repeat_sales_closest_subway['log_distance_second'] = np.log(ues_repeat_sales_closest_subway['distance_second'])
+
+#%% plotting
+import matplotlib.pyplot as plt
+plt.scatter(ues_repeat_sales_closest_subway['distance_second'],ues_repeat_sales_closest_subway['appr_3'])
+
+#%% regression time 
+import statsmodels.api as sm
+
+
+x = ues_repeat_sales_closest_subway[['log_distance_other','log_distance_second','new_closest']]
+y = ues_repeat_sales_closest_subway['appr_3']
+
+x = sm.add_constant(x)
+
+lr = sm.OLS(y,x).fit()
+print(lr.summary())
